@@ -1,6 +1,6 @@
 from flask import render_template, flash, redirect, url_for
 from app import app, db
-from app.forms import LoginForm, RegistrationForm
+from app.forms import LoginForm, RegistrationForm, NewWordsGroup
 from flask_login import current_user, login_user, logout_user
 from flask_login import login_required
 import sqlalchemy as sa
@@ -9,6 +9,9 @@ from app.models import User
 from flask import request
 from urllib.parse import urlsplit
 from app.models import User, Word
+from flask import request, jsonify
+from app.forms import NewWordsGroup
+from wtforms.validators import ValidationError
 
 
 @app.route('/',  methods=['GET', 'POST'])
@@ -17,15 +20,37 @@ from app.models import User, Word
 def index():
     query = sa.select(Word)
     words = db.session.scalars(query).all()
-    return render_template('index.html', title='Home', words=words)
+    return render_template('index.html', title='Home')
 
 
 @app.route('/group_formation', methods=['GET', 'POST'])
 @login_required
 def group_formation():
-    # query = sa.select(Word)
-    # words = db.session.scalars(query).all()
-    return render_template('group_formation.html')
+    form = NewWordsGroup()
+    if form.validate_on_submit():
+        flash("OK\n\n")
+        for word_data in form.words:
+            if word_data.data == "":
+                continue
+            flash(f"{word_data.data}\n")
+            word = Word(word_text=word_data.data, meaning=word_data.data)
+            db.session.add(word)
+            db.session.commit()
+        flash('You,ve created group!')
+        return redirect(url_for('index'))
+
+    return render_template('group_formation.html', form=form)
+
+
+@app.route('/validate_word', methods=['POST'])
+def validate_word():
+    word = request.json['word']
+    form = NewWordsGroup()
+    try:
+        form.validate_word(word)
+        return jsonify({'is_valid': True})
+    except ValidationError as e:
+        return jsonify({'is_valid': False, 'error': str(e)})
 
 
 @app.route('/learn_group', methods=['GET', 'POST'])
@@ -34,7 +59,7 @@ def learn_group():
     # TODO
     # if user got group learn
     # else redirect for create new group
-    return render_template('group_formation.html')
+    return render_template('index.html')
 
 
 @app.route('/see_group_results', methods=['GET', 'POST'])
@@ -44,12 +69,20 @@ def see_group_results():
     return render_template('group_formation.html')
 
 
+@app.route('/see_all_words', methods=['GET', 'POST'])
+@login_required
+def see_all_words():
+    # TODO
+    # debug function: removal's possible
+    query = sa.select(Word)
+    words = db.session.scalars(query).all()
+    return render_template('see_all_words.html', words=words)
+
+
 @app.route('/acquaint_word_meaning/<word>')
 @login_required
 def acquaint_word_meaning(word):
-    query = sa.select(Word)
-    words = db.session.scalars(query).all()
-    return render_template('index.html', title='Home', words=words)
+    pass
 
 
 @app.route('/user/<username>')
@@ -63,21 +96,21 @@ def user(username):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-  if current_user.is_authenticated:
-    return redirect(url_for('index'))
-  form = LoginForm()
-  if form.validate_on_submit():
-    user = db.session.scalar(
-      sa.select(User).where(User.email == form.email.data))
-    if user is None or not user.check_password(form.password.data):
-      flash('Invalid email or password')
-      return redirect(url_for('login'))
-    login_user(user, remember=form.remember_me.data)
-    next_page = request.args.get('next')
-    if not next_page or urlsplit(next_page).netloc != '':
-      next_page = url_for('index')
-    return redirect(next_page)
-  return render_template('login.html', title='Sign In', form=form)
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = db.session.scalar(
+            sa.select(User).where(User.email == form.email.data))
+        if user is None or not user.check_password(form.password.data):
+            flash('Invalid email or password')
+            return redirect(url_for('login'))
+        login_user(user, remember=form.remember_me.data)
+        next_page = request.args.get('next')
+        if not next_page or urlsplit(next_page).netloc != '':
+            next_page = url_for('index')
+        return redirect(next_page)
+    return render_template('login.html', title='Sign In', form=form)
 
 
 @app.route('/register', methods=['GET', 'POST'])

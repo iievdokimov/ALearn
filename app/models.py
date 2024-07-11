@@ -17,7 +17,7 @@ words_in_process = db.Table('words_in_process',
 
 @login.user_loader
 def load_user(id):
-  return db.session.get(User, int(id))
+    return db.session.get(User, int(id))
 
 
 class User(UserMixin, db.Model):
