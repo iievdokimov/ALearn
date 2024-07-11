@@ -11,10 +11,42 @@ from urllib.parse import urlsplit
 from app.models import User, Word
 
 
-@app.route('/')
-@app.route('/index')
+@app.route('/',  methods=['GET', 'POST'])
+@app.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
+    query = sa.select(Word)
+    words = db.session.scalars(query).all()
+    return render_template('index.html', title='Home', words=words)
+
+
+@app.route('/group_formation', methods=['GET', 'POST'])
+@login_required
+def group_formation():
+    # query = sa.select(Word)
+    # words = db.session.scalars(query).all()
+    return render_template('group_formation.html')
+
+
+@app.route('/learn_group', methods=['GET', 'POST'])
+@login_required
+def learn_group():
+    # TODO
+    # if user got group learn
+    # else redirect for create new group
+    return render_template('group_formation.html')
+
+
+@app.route('/see_group_results', methods=['GET', 'POST'])
+@login_required
+def see_group_results():
+    # TODO
+    return render_template('group_formation.html')
+
+
+@app.route('/acquaint_word_meaning/<word>')
+@login_required
+def acquaint_word_meaning(word):
     query = sa.select(Word)
     words = db.session.scalars(query).all()
     return render_template('index.html', title='Home', words=words)

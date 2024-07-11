@@ -1,8 +1,17 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Hi, {{ current_user.username }}!</h1>
-    {% for word in words %}
-    <div><p>word: {{ word.word_text }} meaning: <b>{{ word.meaning }}</b></p></div>
-    {% endfor %}
+<div class="d-flex align-items-center justify-content-center">
+    <div class="container text-center" style="max-width: 400px;">
+        <h1 class="mb-4">Hi, {{ current_user.username }}!</h1>
+        <div class="d-flex flex-column">
+            <a href="{{ url_for('learn_group') }}" class="btn btn-outline-primary mb-2">Learn words</a>
+            <a href="{{ url_for('see_group_results') }}" class="btn btn-outline-primary mb-2">Improve learned</a>
+            <a href="{{ url_for('group_formation') }}" class="btn btn-outline-primary mb-2">Create new group</a>
+        </div>
+    </div>
+</div>
+<!--    {% for word in words %}-->
+<!--    <div><p>word: {{ word.word_text }} meaning: <b>{{ word.meaning }}</b></p></div>-->
+<!--    {% endfor %}-->
 {% endblock %}

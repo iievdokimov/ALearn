@@ -6,6 +6,9 @@ from app import db
 from app.models import User
 
 
+class NewWordsGroup(FlaskForm):
+  pass
+
 class LoginForm(FlaskForm):
   email = StringField('Email', validators=[DataRequired()])
   password = PasswordField('Password', validators=[DataRequired()])
