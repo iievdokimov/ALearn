@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1><b>Meanings</b> of words</h1>
+    <div class="word-group">
+      <div>
+        {% for word in word_group.words %}
+          <p>{{ word.word_text }} {{ word.meaning}}</p>
+        {% endfor %}
+      </div>
+    </div>
+{% endblock %}

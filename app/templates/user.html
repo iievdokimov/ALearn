@@ -1,11 +1,16 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>User: {{ user.username }}</h1>
-    <hr>
-    {% for word in words %}
-    <p>
-    {{ word.word_text }} - <b>{{ word.meaning }}</b>
-    </p>
-    {% endfor %}
+  <h1>{{ current_user.username }}'s word groups</h1>
+  {% for group in word_groups %}
+    <div class="word-group">
+<!--      <h2>{{ group.name }}</h2>-->
+      <p>Created at: {{ group.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+      <div>
+        {% for word in group.words %}
+          <p>{{ word.word_text }}</p>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
 {% endblock %}
