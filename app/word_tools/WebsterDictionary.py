@@ -1,18 +1,32 @@
 import traceback
 import requests
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 def get_word_data_webster(word):
     # data = {}
-    # data_Thes = get_data_Thes(word)
-    data_Dict = get_data_Dict(word)
+    # data_Thes = get_data_Thes(word, api_key_Thes)
+    WEBSTER_DICT_API_KEY = os.getenv('WEBSTER_DICT_API_KEY')
+    WEBSTER_THESUARUS_API_KEY = os.getenv('WEBSTER_THESAURUS_API_KEY')
+
+    data_Dict = get_data_Dict(word, WEBSTER_DICT_API_KEY)
     data = data_Dict
 
     return data
 
 
+def parse_definition_list(definition : list) -> str:
+    if isinstance(definition, str):
+        return definition
+    elif isinstance(definition, list) and len(definition) > 0:
+        return parse_definition_list(definition[0])
+    else:
+        return ""
 
-def get_data_Thes(word):
+
+def get_data_Thes(word, api_key):
     '''
     :param word:
     :return: DATA FEATURES AVAILABLE IN THIS REFERENCE
@@ -25,7 +39,7 @@ def get_data_Thes(word):
         Examples
         Spelling suggestions
     '''
-    api_key_Thesaurus = ""
+    api_key_Thesaurus = api_key
     url = (f"https://www.dictionaryapi.com/api/v3/references/thesaurus/json/"
                 f"{word}?"
                 f"key={api_key_Thesaurus}")
@@ -38,19 +52,12 @@ def get_data_Thes(word):
 def find_vis_entries(data):
     vis_entries = []
     res = []
-    print()
-    print("RECURSIVE-FIND")
-    print()
 
     def recursive_search(d):
         if isinstance(d, dict):
             for key, value in d.items():
                 print("rec KV", key, value)
                 if isinstance(value, list):
-                    print("LIST", value)
-                    for el in value:
-                        print(type(el), el)
-                    print(value[0] == 'vis')
                     if 'vis' == value[0]:
                         vis_entries.extend(value)
                         res.extend(value)
@@ -68,12 +75,10 @@ def find_vis_entries(data):
                 recursive_search(item)
 
     recursive_search(data)
-    # return vis_entries
-    print("Found:", res)
     return res
 
 
-def get_data_Dict(word):
+def get_data_Dict(word, api_key):
     '''
     :param word:
     :return: DATA FEATURES AVAILABLE IN THIS REFERENCE
@@ -87,7 +92,7 @@ def get_data_Dict(word):
         Spelling suggestions
     '''
 
-    api_key_Dict = ""
+    api_key_Dict = api_key
     url = (f"https://www.dictionaryapi.com/api/v3/references/collegiate/json/"
            f"{word}?"
            f"key={api_key_Dict}")
@@ -124,7 +129,7 @@ def get_data_Dict(word):
             traceback.print_exc()
             pass
         try:
-            data_part["definition"] = data[i]["shortdef"]
+            data_part["definition"] = parse_definition_list(data[i]["shortdef"])
         except:
             traceback.print_exc()
             pass

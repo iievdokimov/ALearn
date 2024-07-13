@@ -10,11 +10,17 @@ from datetime import datetime, UTC
 from sqlalchemy.orm import relationship
 
 
-words_groups_association = Table(
-    'words_groups',
-    db.Model.metadata,
-    Column('word_id', Integer, ForeignKey('word.id'), primary_key=True),
-    Column('group_id', Integer, ForeignKey('word_group.id'), primary_key=True)
+# words_groups_association = Table(
+#     'words_groups',
+#     db.Model.metadata,
+#     Column('word_id', Integer, ForeignKey('word.id'), primary_key=True),
+#     Column('group_id', Integer, ForeignKey('word_group.id'), primary_key=True)
+# )
+
+wordgroup_worddefined = db.Table(
+    'wordgroup_worddefined',
+    db.Column('wordgroup_id', db.Integer, ForeignKey('word_group.id'), primary_key=True),
+    db.Column('worddefined_id', db.Integer, ForeignKey('word_defined.id'), primary_key=True)
 )
 
 
@@ -44,23 +50,45 @@ class User(UserMixin, db.Model):
 
 class Word(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    word_text = db.Column(db.String(64), unique=True, nullable=False)
-    meaning = db.Column(db.String(512))
+    word_text = db.Column(db.String(80), unique=True, nullable=False)
+    definitions = relationship('Definition', back_populates='word')
 
-    groups = relationship('WordGroup', secondary=words_groups_association, back_populates='words')
+    # groups = relationship('WordGroup', secondary=words_groups_association, back_populates='words')
 
     def __repr__(self):
         return f'<Word {self.word_text}>'
 
 
+class Definition(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    text = db.Column(db.Text, nullable=False)
+    part_of_speech = db.Column(db.String(20))
+    word_text = db.Column(db.String(64))
+    examples = db.Column(db.Text)
+    word_id = db.Column(db.Integer, ForeignKey('word.id'), nullable=False)
+    word = relationship('Word', back_populates='definitions')
+
+    def __repr__(self):
+        return f"{self.word_text} ({self.part_of_speech}) - {self.text}"
+
+
+class WordDefined(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    word_id = db.Column(db.Integer, ForeignKey('word.id'), nullable=False)
+    definition_id = db.Column(db.Integer, ForeignKey('definition.id'), nullable=False)
+    word = relationship('Word')
+    definition = relationship('Definition')
+    word_groups = relationship('WordGroup', secondary=wordgroup_worddefined, back_populates='word_defineds')
+    __table_args__ = (db.UniqueConstraint('word_id', 'definition_id', name='_word_definition_uc'),)
+
+
 class WordGroup(db.Model):
-    id = Column(Integer, primary_key=True)
-    # name = Column(String(100))
-    user_id = Column(Integer, ForeignKey('user.id'))
-    created_at = Column(DateTime, default=datetime.now(UTC))
+    id = db.Column(db.Integer, primary_key=True)
+    # name = db.Column(db.String(80), nullable=False)
+    user_id = db.Column(db.Integer, ForeignKey('user.id'), nullable=False)
     user = relationship('User', back_populates='word_groups')
-    words = relationship('Word', secondary=words_groups_association,
-                         back_populates='groups')
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    word_defineds = relationship('WordDefined', secondary='wordgroup_worddefined', back_populates='word_groups')
 
     # info fields
     # group progress

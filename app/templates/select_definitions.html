@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Select Definitions</h1>
+  <form method="POST">
+    {% for form in forms %}
+      {{ form.hidden_tag() }}
+      <div>
+        <h3>{{ form.word.data }}</h3>
+        <label>{{ form.definitions.label }}</label>
+        {{ form.definitions() }}
+      </div>
+    {% endfor %}
+    <button type="submit">Create Group</button>
+  </form>
+<!--  <h1>Select Definitions</h1>-->
+<!--  <form method="POST">-->
+<!--    {% for form in forms %}-->
+<!--      {{ form.hidden_tag() }}-->
+<!--      <div>-->
+<!--        <label>{{ form.word.label }} {{ form.word }}</label>-->
+<!--        <select name="selected_definition">-->
+<!--          {% for definition in form.definitions %}-->
+<!--            <option value="{{ definition }}">{{ definition }}</option>-->
+<!--          {% endfor %}-->
+<!--        </select>-->
+<!--      </div>-->
+<!--    {% endfor %}-->
+<!--    <button type="submit">Create Group</button>-->
+<!--  </form>-->
+{% endblock %}

@@ -5,6 +5,10 @@
     <div class="word-group">
       <div>
         {% for word in word_group.words %}
+          <p>word: {{ word.word_text }}</p>
+          <p>part_of_speech: {{ word.part_of_speech }}</p>
+          <p>defenition: {{ word.word_text }} {{ word.meaning}}</p>
+          <p>examples: {{ word.examples }}</p>
           <p>{{ word.word_text }} {{ word.meaning}}</p>
         {% endfor %}
       </div>

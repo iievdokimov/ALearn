@@ -5,12 +5,15 @@
   {% for group in word_groups %}
     <div class="word-group">
 <!--      <h2>{{ group.name }}</h2>-->
-      <p>Created at: {{ group.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+        <p>group: </p>
       <div>
-        {% for word in group.words %}
-          <p>{{ word.word_text }}</p>
+        {% for word_def in group.word_defineds %}
+          <p>word: {{word_def.definition.word}}</p>
+          <p>part_of_speech: {{word_def.definition.part_of_speech}}</p>
+          <p>definition: {{word_def.definition.text}}</p>
         {% endfor %}
       </div>
+        <p>from: {{ group.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
     </div>
   {% endfor %}
 {% endblock %}
