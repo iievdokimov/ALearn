@@ -8,10 +8,11 @@ from flask_login import (current_user, login_user,
                          logout_user, login_required)
 import sqlalchemy as sa
 from urllib.parse import urlsplit
-from app.models import User, Word, WordGroup, WordDefined, Definition
+from app.models import User, Word, WordGroup, Definition
 from wtforms.validators import ValidationError
 from wtforms import StringField
 from app.word_tools import WebsterDictionary
+from app.task_tools import TaskCreationAI
 from typing import cast
 
 
@@ -19,8 +20,6 @@ from typing import cast
 @app.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
-    query = sa.select(Word)
-    words = db.session.scalars(query).all()
     return render_template('index.html', title='Home')
 
 
@@ -52,7 +51,6 @@ def get_definitions_for_word(word_text):
 
     if word.definitions:
         return word.definitions
-
     add_definitions_to_db(word, word_text)
 
     return word.definitions
@@ -60,6 +58,7 @@ def get_definitions_for_word(word_text):
 
 def add_definitions_to_db(word, word_text):
     words_data = WebsterDictionary.get_word_data_webster(word_text)
+    # flash(f"WebsterAPI data: {words_data}")
     for data in words_data:
         definition_text = data["definition"]
         word_text = data["word_id"]
@@ -76,31 +75,45 @@ def create_word_group(user_id, selected_definitions):
     #TODO
     # revision
 
-    # flash("Creating group:")
-    # flash(selected_definitions)
-    #
-    # words = db.session.scalars(sa.select(Word)).all()
-    # flash("words=")
-    # for word in words:
-    #     flash(word)
-    #
-    # flash(selected_definitions[0]["definition_id"])
+    flash("Creating group:")
+    flash(selected_definitions)
 
-    # defs = db.session.scalars(sa.select(Definition).where(
-    #     cast('ColumnElement[bool]', Definition.id == selected_definitions[0]["definition_id"])
-    # )).all()
-    # flash("defs=")
-    # for el in defs:
-    #     flash(el.id)
-    #     flash(el.word_text)
+    words = db.session.scalars(sa.select(Word)).all()
+    flash("words=")
+    for word in words:
+        flash(word)
+
+    flash("definitions ids:0-1")
+    flash(selected_definitions[0]["definition_id"])
+    flash(selected_definitions[1]["definition_id"])
+
+    defs = db.session.scalars(sa.select(Definition).where(
+        cast('ColumnElement[bool]', Definition.id == selected_definitions[0]["definition_id"])
+    )).all()
+    flash("defs=")
+    for el in defs:
+        flash(el.id)
+        flash(el.word_text)
+    flash("--------------------------")
+    defs = db.session.scalars(sa.select(Definition).where(
+        cast('ColumnElement[bool]', Definition.id == selected_definitions[1]["definition_id"])
+    )).all()
+    flash("defs=")
+    for el in defs:
+        flash(el.id)
+        flash(el.word_text)
+    flash("--------------------------")
+
     new_group = WordGroup(user_id=user_id)
     for item in selected_definitions:
-        word = db.session.scalars(sa.select(Word).where(
-            cast("ColumnElement[bool]", Word.word_text == item['word']))).first()
+        flash(f"ITEM: {item}")
+        # word = db.session.scalars(sa.select(Word).where(
+        #     cast("ColumnElement[bool]", Word.word_text == item['word']))).first()
         definition = db.session.scalars(sa.select(Definition).where(
             cast("ColumnElement[bool]", Definition.id == item['definition_id']))).first()
-        word_defined = WordDefined(word_id=word.id, definition_id=definition.id)
-        new_group.word_defineds.append(word_defined)
+
+        if definition:
+            new_group.words_definitions.append(definition)
     db.session.add(new_group)
     db.session.commit()
 
@@ -109,27 +122,34 @@ def create_word_group(user_id, selected_definitions):
 @login_required
 def select_definitions():
     words = request.args.getlist('words')
+    # form = DefinitionSelectionForm()
     forms = []
 
+    flash("in select")
+    i = 0
     for word in words:
         definitions = get_definitions_for_word(word)
-        form = DefinitionSelectionForm()
-        form.word.data = word
-        # form.definitions.entries = [StringField(default=definition) for definition in definitions]
-        form.definitions.choices = [(definition.id, definition.__repr__()) for definition in definitions]
-        forms.append(form)
+        flash(word)
+        flash(definitions)
+        single_form = DefinitionSelectionForm(prefix=f"word_{i}")
+        single_form.word.data = word
+        single_form.definitions.choices = [(definition.id, definition.__repr__()) for definition in definitions]
+        forms.append(single_form)
+        i += 1
 
+    selected_definitions = []
     if request.method == 'POST':
-        selected_definitions = []
+        # all_valid = True
         for form in forms:
             selected_definitions.append({
                 'word': form.word.data,
                 'definition_id': form.definitions.data
             })
-        # Сохраняем группу слов с выбранными определениями
+
+        flash(selected_definitions)
         create_word_group(current_user.id, selected_definitions)
-        # flash("SUCCESS")
-        return redirect(url_for('user', username=current_user.username))
+        flash("success: saving group")
+        # return redirect(url_for('user', username=current_user.username))
 
     return render_template('select_definitions.html', forms=forms)
 
@@ -185,6 +205,7 @@ def acquaint_words_meaning(group_id):
         return redirect(url_for('index'), )
     return render_template('acquaint_words_meaning.html', word_group=word_group)
 
+
 # @app.route('/acquaint_word_meaning/<word>')
 # @login_required
 # def acquaint_word_meaning(word):
@@ -194,7 +215,6 @@ def acquaint_words_meaning(group_id):
 @app.route('/user/<username>')
 @login_required
 def user(username):
-    # user = current_user
     query = sa.select(WordGroup).where(
         cast("ColumnElement[bool]", WordGroup.user_id == current_user.id)).order_by(sa.desc(WordGroup.created_at))
     word_groups = db.session.scalars(query).all()
@@ -239,3 +259,31 @@ def register():
 def logout():
     logout_user()
     return redirect(url_for('index'))
+
+
+@app.route('/task_fill_in_the_gap/<int:group_id>')
+@login_required
+def task_fill_the_gaps(group_id):
+    query = sa.select(WordGroup).where(
+        cast("ColumnElement[bool]", WordGroup.user_id == current_user.id)).order_by(sa.desc(WordGroup.created_at))
+    words_with_definitions = db.session.scalars(query).first()
+
+    if not words_with_definitions:
+        return render_template('404.html')
+
+    task = {}
+    for word_def in words_with_definitions.word_defineds:
+        flash(word_def.definition.text)
+    # task = TaskCreationAI.generate_fill_the_gaps_task(words_with_definitions)
+    # return jsonify(fill_the_gaps_task)
+    return render_template('task_fill_in_the_gaps.html', task=task,
+                           group_id=group_id)
+
+
+@app.route('/submit_task_fill_the_gaps/<int:group_id>')
+@login_required
+def submit_task_fill_the_gaps(group_id):
+    #TODO
+    # 1. counting result
+    # 2. saving group result for user
+    return render_template('index.html')

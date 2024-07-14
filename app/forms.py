@@ -1,6 +1,6 @@
-from flask_wtf import FlaskForm
+from flask_wtf import FlaskForm, Form
 from wtforms import (StringField, PasswordField, BooleanField,
-                     SubmitField, FieldList, SelectField)
+                     SubmitField, FieldList, SelectField, FormField)
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
 import sqlalchemy as sa
 from app import db
@@ -26,18 +26,20 @@ class NewWordsGroup(FlaskForm):
             raise ValidationError('No such word. Please check the spelling.')
 
 
+# class SingleDefinitionForm(FlaskForm):
+#     word = StringField('Word', render_kw={'readonly': True})
+#     definitions = SelectField('Definitions', choices=[], coerce=int, validators=[DataRequired()])
+#
+#
+# class DefinitionSelectionForm(FlaskForm):
+#     words_definitions = FieldList(FormField(SingleDefinitionForm))
+#     submit = SubmitField('Create Group')
+
+
 class DefinitionSelectionForm(FlaskForm):
     word = StringField('Word', render_kw={'readonly': True})
-    # definitions = FieldList(StringField('Definition'))
     definitions = SelectField('Definitions', choices=[], coerce=int, validators=[DataRequired()])
-    # selected_definition = StringField('Selected Definition', validators=[DataRequired()])
     submit = SubmitField('Create Group')
-
-# class DefinitionSelectionForm(FlaskForm):
-#     word = HiddenField('Word')
-#     definitions = SelectField('Definitions', choices=[])
-#     submit = SubmitField('Submit')
-
 
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired()])
