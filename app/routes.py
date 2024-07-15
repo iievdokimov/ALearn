@@ -34,11 +34,6 @@ def group_formation():
         for word_data in form.words:
             if word_data.data == "":
                 continue
-            word = db.session.scalars(sa.select(Word).where(Word.word_text == word_data.data)).first()
-            if not word:
-                word = Word(word_text=word_data.data)
-                db.session.add(word)
-                db.session.commit()
             words.append(word_data.data)
 
         # session['words'] = words
@@ -48,20 +43,31 @@ def group_formation():
 
 
 def get_definitions_for_word(word_text):
+    words_data = WebsterDictionary.get_word_data_webster(word_text)
+
+    # check if word in dictionary
+    if not WebsterDictionary.in_Webster(words_data):
+        word_text = words_data[0]
+        words_data = None
+
     word = db.session.scalars(sa.select(Word).where(
         cast("ColumnElement[bool]", Word.word_text == word_text))).first()
     if not word:
-        return []
+        word = Word(word_text=word_text)
+        db.session.add(word)
+        db.session.commit()
 
     if word.definitions:
         return word.definitions
-    add_definitions_to_db(word, word_text)
+    add_definitions_to_db(word, word_text, words_data)
 
     return word.definitions
 
 
-def add_definitions_to_db(word, word_text):
-    words_data = WebsterDictionary.get_word_data_webster(word_text)
+def add_definitions_to_db(word, word_text, words_data):
+    if not words_data:
+        words_data = WebsterDictionary.get_word_data_webster(word_text)
+
     # flash(f"WebsterAPI data: {words_data}")
     for data in words_data:
         definition_text = data["definition"]

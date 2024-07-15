@@ -56,7 +56,6 @@ def find_vis_entries(data):
     def recursive_search(d):
         if isinstance(d, dict):
             for key, value in d.items():
-                print("rec KV", key, value)
                 if isinstance(value, list):
                     if 'vis' == value[0]:
                         vis_entries.extend(value)
@@ -111,6 +110,10 @@ def get_data_Dict(word, api_key):
         return {}
 
     res_data = []
+
+    if not in_Webster(data):
+        return data
+
     for i in range(len(data)):
         data_part = {
             "word_id": "",
@@ -149,6 +152,15 @@ def get_data_Dict(word, api_key):
 
     return res_data
 
+
+def in_Webster(words_data):
+    if not isinstance(words_data, list):
+        return False
+    if len(words_data) == 0:
+        return False
+    if isinstance(words_data[0], str):
+        return False
+    return True
 
 # word = input()
 # print(get_data_Dict(word))
