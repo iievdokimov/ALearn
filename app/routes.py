@@ -1,19 +1,21 @@
 from flask import (render_template, flash,
-                   redirect, url_for, request, jsonify)
+                   redirect, url_for, request, jsonify,
+                   session)
+
 from app import app
 from app import db
 from app.forms import (LoginForm, RegistrationForm,
-                       NewWordsGroup, DefinitionSelectionForm)
+                       NewWordsGroup, DefinitionSelectionForm, MatchDefinitionsForm)
 from flask_login import (current_user, login_user,
                          logout_user, login_required)
 import sqlalchemy as sa
 from urllib.parse import urlsplit
 from app.models import User, Word, WordGroup, Definition
 from wtforms.validators import ValidationError
-from wtforms import StringField
 from app.word_tools import WebsterDictionary
 from app.task_tools import TaskCreationAI
 from typing import cast
+import random
 
 
 @app.route('/',  methods=['GET', 'POST'])
@@ -38,6 +40,8 @@ def group_formation():
                 db.session.add(word)
                 db.session.commit()
             words.append(word_data.data)
+
+        # session['words'] = words
         return redirect(url_for(f'select_definitions', words=words))
 
     return render_template('group_formation.html', form=form)
@@ -72,43 +76,8 @@ def add_definitions_to_db(word, word_text):
 
 
 def create_word_group(user_id, selected_definitions):
-    #TODO
-    # revision
-
-    flash("Creating group:")
-    flash(selected_definitions)
-
-    words = db.session.scalars(sa.select(Word)).all()
-    flash("words=")
-    for word in words:
-        flash(word)
-
-    flash("definitions ids:0-1")
-    flash(selected_definitions[0]["definition_id"])
-    flash(selected_definitions[1]["definition_id"])
-
-    defs = db.session.scalars(sa.select(Definition).where(
-        cast('ColumnElement[bool]', Definition.id == selected_definitions[0]["definition_id"])
-    )).all()
-    flash("defs=")
-    for el in defs:
-        flash(el.id)
-        flash(el.word_text)
-    flash("--------------------------")
-    defs = db.session.scalars(sa.select(Definition).where(
-        cast('ColumnElement[bool]', Definition.id == selected_definitions[1]["definition_id"])
-    )).all()
-    flash("defs=")
-    for el in defs:
-        flash(el.id)
-        flash(el.word_text)
-    flash("--------------------------")
-
     new_group = WordGroup(user_id=user_id)
     for item in selected_definitions:
-        flash(f"ITEM: {item}")
-        # word = db.session.scalars(sa.select(Word).where(
-        #     cast("ColumnElement[bool]", Word.word_text == item['word']))).first()
         definition = db.session.scalars(sa.select(Definition).where(
             cast("ColumnElement[bool]", Definition.id == item['definition_id']))).first()
 
@@ -122,15 +91,15 @@ def create_word_group(user_id, selected_definitions):
 @login_required
 def select_definitions():
     words = request.args.getlist('words')
-    # form = DefinitionSelectionForm()
+    # words = session.get('words', [])
     forms = []
 
-    flash("in select")
+    # flash("in select")
     i = 0
     for word in words:
         definitions = get_definitions_for_word(word)
-        flash(word)
-        flash(definitions)
+        # flash(word)
+        # flash(definitions)
         single_form = DefinitionSelectionForm(prefix=f"word_{i}")
         single_form.word.data = word
         single_form.definitions.choices = [(definition.id, definition.__repr__()) for definition in definitions]
@@ -146,10 +115,10 @@ def select_definitions():
                 'definition_id': form.definitions.data
             })
 
-        flash(selected_definitions)
+        # flash(selected_definitions)
         create_word_group(current_user.id, selected_definitions)
         flash("success: saving group")
-        # return redirect(url_for('user', username=current_user.username))
+        return redirect(url_for('user', username=current_user.username))
 
     return render_template('select_definitions.html', forms=forms)
 
@@ -287,3 +256,79 @@ def submit_task_fill_the_gaps(group_id):
     # 1. counting result
     # 2. saving group result for user
     return render_template('index.html')
+
+
+def create_task_match_definitions(group):
+    task = {"words": [], "definitions": []}
+    answers = {}
+    for definition in group.words_definitions:
+        task["words"].append(definition.word_text)
+        task["definitions"].append(definition.text)
+        answers[definition.text] = definition.word_text
+
+    random.shuffle(task["words"])
+    random.shuffle(task["definitions"])
+
+    return task, answers
+
+
+@app.route('/task_match_definitions/<int:group_id>', methods=['GET', 'POST'])
+@login_required
+def task_match_definitions(group_id):
+    query = sa.select(WordGroup).where(
+        cast("ColumnElement[bool]", WordGroup.user_id == current_user.id)).order_by(sa.desc(WordGroup.created_at))
+    group = db.session.scalars(query).first()
+
+    if not group:
+        return render_template('404.html')
+
+    task, answers = create_task_match_definitions(group)
+
+    forms = []
+    i = 0
+    for definition in task["definitions"]:
+        form = MatchDefinitionsForm(prefix=f"def_{i}")
+        form.definition.data = definition
+        forms.append(form)
+        i += 1
+
+    # user_answers = []
+    task_data = []
+    if request.method == 'POST':
+        # all_valid = True
+        for form in forms:
+            task_data.append({
+                'definition': form.definition.data,
+                'user_word': form.answer.data,
+                'answer_word': answers[form.definition.data]
+            })
+
+        flash(task_data)
+        flash("success: saving user_answers")
+        # task_data_json = json.dumps(task_data)
+        session['task_data'] = task_data
+        # task_data = {"user": user_answers, "correct": answers}
+        return redirect(url_for('check_task_match_definitions', group_id=group_id,
+                                task_data=task_data))
+
+    return render_template('task_match_definitions.html', forms=forms,
+                           words=task['words'], group_id=group_id)
+
+
+@app.route('/check_task_match_definitions/<int:group_id>', methods=['GET', 'POST'])
+@login_required
+def check_task_match_definitions(group_id):
+    #TODO
+    # 1. counting result
+    # 2. saving group result for user
+
+    # task_data_json = request.args.get('task_data_json')
+    # task_data = []
+    # if task_data_json:
+    #     task_data = json.loads(task_data_json)
+
+    task_data = session.get('task_data', [])
+
+    # flash(f"GET TASK: {task_data}")
+
+    return render_template('check_task_match_definitions.html', task_data=task_data)

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+{% for result in task_data %}
+<div>
+    <p>{{ result['user_word'] }} - {{ result['definition'] }}</p>
+    {% if result['user_word'] == result['answer_word'] %}
+    <h3>[Correct]</h3>
+    {% else %}
+    <h3>[Wrong]</h3>
+    <p>(correct word: {{ result['answer_word'] }})</p>
+    {% endif %}
+</div>
+{% endfor %}
+
+
+{% endblock %}

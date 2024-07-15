@@ -65,9 +65,6 @@ class Definition(db.Model):
     def __repr__(self):
         return f"{self.word_text} ({self.part_of_speech}) - {self.text}"
 
-    def word_defined(self):
-        return self.word_text
-
 
 class WordGroup(db.Model):
     id = db.Column(db.Integer, primary_key=True)

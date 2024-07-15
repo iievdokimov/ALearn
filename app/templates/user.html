@@ -5,7 +5,7 @@
   {% for group in word_groups %}
     <div class="word-group">
 <!--      <h2>{{ group.name }}</h2>-->
-        <p><b>group: </b></p>
+        <p><b>group: {{ group.id }}</b></p>
         <p>----------------------------------------------------------------------------------------</p>
       <div>
         {% for definition in group.words_definitions %}

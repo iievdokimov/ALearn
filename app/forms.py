@@ -18,7 +18,7 @@ def word_exists(word):
 
 class NewWordsGroup(FlaskForm):
     words = FieldList(StringField('word'), min_entries=2, max_entries=15)
-    submit = SubmitField('Create')
+    submit = SubmitField('Next')
 
     def validate_word(self, word):
         # flash("Validating new word")
@@ -26,20 +26,17 @@ class NewWordsGroup(FlaskForm):
             raise ValidationError('No such word. Please check the spelling.')
 
 
-# class SingleDefinitionForm(FlaskForm):
-#     word = StringField('Word', render_kw={'readonly': True})
-#     definitions = SelectField('Definitions', choices=[], coerce=int, validators=[DataRequired()])
-#
-#
-# class DefinitionSelectionForm(FlaskForm):
-#     words_definitions = FieldList(FormField(SingleDefinitionForm))
-#     submit = SubmitField('Create Group')
-
-
 class DefinitionSelectionForm(FlaskForm):
     word = StringField('Word', render_kw={'readonly': True})
     definitions = SelectField('Definitions', choices=[], coerce=int, validators=[DataRequired()])
-    submit = SubmitField('Create Group')
+    submit = SubmitField('Create group')
+
+
+class MatchDefinitionsForm(FlaskForm):
+    definition = StringField('Definition', render_kw={'readonly': True})
+    answer = StringField(validators=[DataRequired()])
+    submit = SubmitField('Submit answers')
+
 
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired()])

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Match Definitions</h1>
+    <div>
+    {% for word in words %}
+        <span>{{ word }}</span>{% if not loop.last %}; {% endif %}
+    {% endfor %}
+    </div>
+  <form method="POST">
+    {% for form in forms %}
+      <div>
+        <label>{{ form.definition.label }}</label>
+          <p>{{ form.answer() }} - {{ form.definition.data }}</p>
+      </div>
+    {% endfor %}
+    <button type="submit">Submit answers</button>
+  </form>
+{% endblock %}
