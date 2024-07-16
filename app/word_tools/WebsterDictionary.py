@@ -77,7 +77,7 @@ def find_vis_entries(data):
     return res
 
 
-def filter_word_text(word):
+def cut_after_doubledot(word):
     idx_end = word.find(':')
     if idx_end != -1:
         word = word[:idx_end]
@@ -134,12 +134,13 @@ def get_data_Dict(word, api_key):
             traceback.print_exc()
             pass
         try:
-            data_part["word_id"] = filter_word_text(data[i]['meta']['id'])
+            data_part["word_id"] = cut_after_doubledot(data[i]['meta']['id'])
         except:
             traceback.print_exc()
             pass
         try:
-            data_part["definition"] = parse_definition_list(data[i]["shortdef"])
+            data_part["definition"] = cut_after_doubledot(
+                parse_definition_list(data[i]["shortdef"]))
         except:
             traceback.print_exc()
             pass

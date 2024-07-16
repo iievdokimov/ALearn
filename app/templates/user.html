@@ -1,23 +1,41 @@
 {% extends "base.html" %}
 
 {% block content %}
+<main>
+<div class="container">
   <h1>{{ current_user.username }}'s word groups</h1>
+    <div class="row mb-3 text-center">
+    <div class="col-2 themed-grid-col-top">word</div>
+    <div class="col-2 themed-grid-col-top">part_of_speech</div>
+    <div class="col-8 themed-grid-col-top">definition</div>
+  </div>
   {% for group in word_groups %}
-    <div class="word-group">
+    <div class="row">
 <!--      <h2>{{ group.name }}</h2>-->
         <p><b>group: {{ group.id }}</b></p>
-        <p>----------------------------------------------------------------------------------------</p>
       <div>
         {% for definition in group.words_definitions %}
-          <p>*****</p>
-          <p>word: {{definition.word_text}}</p>
-          <p>part_of_speech: {{definition.part_of_speech}}</p>
-          <p>definition: {{definition.text}}</p>
-          <p>*****</p>
+          <div class="row mb-3 text-center">
+            <div class="col-2 themed-grid-col">{{definition.word_text}}</div>
+            <div class="col-2 themed-grid-col">{{definition.part_of_speech}}</div>
+            <div class="col-8 themed-grid-col">{{definition.text}}</div>
+          </div>
         {% endfor %}
-          <p>----------------------------------------------------------------------------------------</p>
-      </div>
-        <p>from: {{ group.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+        <div class="row">
+            <div class="col">
+              <form action="{{ url_for('task_match_definitions', group_id=group.id) }}" class="d-inline">
+                <input type="hidden" name="group_id" value="{{ group.id }}">
+                <button type="submit" name="action" value="learn" class="btn btn-primary">Learn</button>
+              </form>
+              <form action="{{ url_for('task_match_definitions', group_id=group.id) }}" class="d-inline">
+                <input type="hidden" name="group_id" value="{{ group.id }}">
+                <button type="submit" name="action" value="see" class="btn btn-secondary">See</button>
+              </form>
+            </div>
+          </div>
+      <p>from: {{ group.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
     </div>
   {% endfor %}
+</div>
+</main>
 {% endblock %}

@@ -1,0 +1,8 @@
+.form-select {
+  max-width: 100%;
+}
+
+.definition-select option {
+  white-space: normal; /* Позволяет тексту переноситься на новую строку */
+  overflow-wrap: break-word; /* Позволяет длинным словам переноситься */
+}
