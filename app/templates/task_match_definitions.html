@@ -1,19 +1,36 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h1>Match Definitions</h1>
-    <div>
-    {% for word in words %}
-        <span>{{ word }}</span>{% if not loop.last %}; {% endif %}
-    {% endfor %}
+<div class="container">
+  <h1 class="my-4">Match Definitions</h1>
+
+  <!-- Button to toggle collapse -->
+  <button class="btn btn-light mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+    Hint: all words
+  </button>
+
+  <!-- Collapsible content -->
+  <div class="collapse mb-4" id="collapseExample">
+    <div class="card card-body">
+      {% for word in words %}
+      <span>{{ word }}</span>
+      {% endfor %}
     </div>
+  </div>
+
+  <!-- Form -->
   <form method="POST">
     {% for form in forms %}
-      <div>
-        <label>{{ form.definition.label }}</label>
-          <p>{{ form.answer() }} - {{ form.definition.data }}</p>
+      <div class="card mb-4">
+        <div class="card-body">
+          <p>{{ form.answer(class_="form-control") }} - {{ form.definition.data }}</p>
+        </div>
       </div>
     {% endfor %}
-    <button type="submit">Submit answers</button>
+
+    <div class="text-center">
+      <button type="submit" class="btn btn-primary mb-4">Submit answers</button>
+    </div>
   </form>
+</div>
 {% endblock %}

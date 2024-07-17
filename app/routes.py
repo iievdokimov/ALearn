@@ -282,7 +282,7 @@ def create_task_match_definitions(group):
 @login_required
 def task_match_definitions(group_id):
     query = sa.select(WordGroup).where(
-        cast("ColumnElement[bool]", WordGroup.user_id == current_user.id)).order_by(sa.desc(WordGroup.created_at))
+        cast("ColumnElement[bool]", WordGroup.id == group_id)).order_by(sa.desc(WordGroup.created_at))
     group = db.session.scalars(query).first()
 
     if not group:
@@ -309,8 +309,8 @@ def task_match_definitions(group_id):
                 'answer_word': answers[form.definition.data]
             })
 
-        flash(task_data)
-        flash("success: saving user_answers")
+        # flash(task_data)
+        # flash("success: saving user_answers")
         # task_data_json = json.dumps(task_data)
         session['task_data'] = task_data
         # task_data = {"user": user_answers, "correct": answers}
