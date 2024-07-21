@@ -38,6 +38,13 @@ class MatchDefinitionsForm(FlaskForm):
     submit = SubmitField('Submit answers')
 
 
+class FillGapForm(FlaskForm):
+    sentence_start = StringField('Sentence', render_kw={'readonly': True})
+    sentence_end = StringField('Sentence', render_kw={'readonly': True})
+    answer = StringField(validators=[DataRequired()])
+    submit = SubmitField('Submit answers')
+
+
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])

@@ -2,17 +2,16 @@
 
 {% block content %}
 <div class="container mt-4">
-    <button class="btn btn-light mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-        Correct answers
-    </button>
     {% for result in task_data %}
     <div class="card mb-4">
         <div class="card-body">
             <div class="row mb-2">
                 <div class="col-10">
+                    {{ result['sentence_start'] }}
                     <span class="{% if result['user_word'] == result['answer_word'] %}text-success{% else %}text-danger{% endif %}">
                         <b>{{ result['user_word'] }}</b>
-                    </span> - {{ result['definition'] }}
+                    </span>
+                    {{ result['sentence_end'] }}
                 </div>
                 <div class="col-1 d-flex align-items-center justify-content-center">
                     {% if result['user_word'] == result['answer_word'] %}
@@ -24,17 +23,6 @@
             </div>
         </div>
     </div>
-
-    {% if result['user_word'] != result['answer_word'] %}
-    <div class="collapse" id="collapseExample">
-        <div class="card mb-4">
-            <div class="card card-body">
-                Correct answer: {{ result['answer_word'] }}
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
     {% endfor %}
 </div>
 

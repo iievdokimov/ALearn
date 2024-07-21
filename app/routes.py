@@ -5,7 +5,7 @@ from flask import (render_template, flash,
 from app import app
 from app import db
 from app.forms import (LoginForm, RegistrationForm,
-                       NewWordsGroup, DefinitionSelectionForm, MatchDefinitionsForm)
+                       NewWordsGroup, DefinitionSelectionForm, MatchDefinitionsForm, FillGapForm)
 from flask_login import (current_user, login_user,
                          logout_user, login_required)
 import sqlalchemy as sa
@@ -236,32 +236,77 @@ def logout():
     return redirect(url_for('index'))
 
 
-@app.route('/task_fill_in_the_gap/<int:group_id>')
+@app.route('/task_fill_the_gaps/<int:group_id>', methods=['GET', 'POST'])
 @login_required
 def task_fill_the_gaps(group_id):
     query = sa.select(WordGroup).where(
-        cast("ColumnElement[bool]", WordGroup.user_id == current_user.id)).order_by(sa.desc(WordGroup.created_at))
+        cast("ColumnElement[bool]", WordGroup.id == group_id))
     words_with_definitions = db.session.scalars(query).first()
 
-    if not words_with_definitions:
-        return render_template('404.html')
+    # if not words_with_definitions:
+    #     return render_template('404.html')
 
-    task = {}
-    for word_def in words_with_definitions.word_defineds:
-        flash(word_def.definition.text)
+
+    task = [{"sentence_start": "i live", "sentence_end": "life", "answer": "ddd"},
+            {"sentence_start": "i fuck", "sentence_end": "somebody", "answer": "dda"}]
+    answers = {}
+    for el in task:
+        answers[el["sentence_start"] + el["sentence_end"]] = el["answer"]
+
+    forms = []
+    i = 0
+    for sentence in task:
+        form = FillGapForm(prefix=f"gap_{i}")
+        form.sentence_start.data = sentence["sentence_start"]
+        form.sentence_end.data = sentence["sentence_end"]
+        forms.append(form)
+        i += 1
+
+    task_data  = []
+    if request.method == 'POST':
+        for form in forms:
+            task_data.append({
+                'sentence_start': form.sentence_start.data,
+                'sentence_end': form.sentence_end.data,
+                'user_word': form.answer.data,
+                'answer_word': answers[form.sentence_start.data + form.sentence_end.data]
+            })
+
+        session['task_data'] = task_data
+        return redirect(url_for('check_task_fill_gaps', group_id=group_id,
+                                task_data=task_data))
+
     # task = TaskCreationAI.generate_fill_the_gaps_task(words_with_definitions)
-    # return jsonify(fill_the_gaps_task)
-    return render_template('task_fill_in_the_gaps.html', task=task,
+    return render_template('task_fill_in_the_gaps.html', task=task, forms=forms,
                            group_id=group_id)
 
-
-@app.route('/submit_task_fill_the_gaps/<int:group_id>')
+    
+@app.route('/check_task_fill_gaps/<int:group_id>')
 @login_required
-def submit_task_fill_the_gaps(group_id):
+def check_task_fill_gaps(group_id):
     #TODO
     # 1. counting result
     # 2. saving group result for user
-    return render_template('index.html')
+
+    task_data = session.get('task_data', [])
+    flash(task_data)
+
+    points = 0
+    all_points = 0
+    if isinstance(task_data, list) and len(task_data) > 0:
+        for result in task_data:
+            if result['user_word'] == result['answer_word']:
+                points += 1
+            all_points += 1
+
+        query = sa.select(WordGroup).where(
+            cast("ColumnElement[bool]", WordGroup.id == group_id))
+        group = db.session.scalars(query).first()
+        group.points_ratio_fill_gaps = points / all_points
+        db.session.commit()
+
+    return render_template('check_task_fill_gaps.html', task_data=task_data,
+                           points=points, all_points=all_points)
 
 
 def create_task_match_definitions(group):
@@ -335,6 +380,24 @@ def check_task_match_definitions(group_id):
 
     task_data = session.get('task_data', [])
 
-    # flash(f"GET TASK: {task_data}")
+    points = 0
+    all_points = 0
+    if isinstance(task_data, list) and len(task_data) > 0:
+        for result in task_data:
+            if result['user_word'] == result['answer_word']:
+                points += 1
+            all_points += 1
 
-    return render_template('check_task_match_definitions.html', task_data=task_data)
+        query = sa.select(WordGroup).where(
+            cast("ColumnElement[bool]", WordGroup.id == group_id))
+        group = db.session.scalars(query).first()
+        group.points_ratio_math_definitions = points / all_points
+        flash(f"data: {points / all_points}")
+        flash(group.points_ratio_math_definitions)
+        flash("succ")
+        db.session.commit()
+
+     # flash(f"GET TASK: {task_data}")
+    flash("fuck")
+    return render_template('check_task_match_definitions.html', task_data=task_data,
+                           points=points, all_points=all_points)

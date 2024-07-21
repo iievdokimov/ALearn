@@ -76,6 +76,8 @@ class WordGroup(db.Model):
 
     # info fields
     # group progress
+    points_ratio_math_definitions = db.Column(db.Integer)
+    points_ratio_fill_gaps = db.Column(db.Integer)
     # common mistakes
 
 

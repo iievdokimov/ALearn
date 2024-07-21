@@ -22,10 +22,18 @@
           </div>
         {% endfor %}
         <div class="row">
+          <p>match definitions: {{ group.points_ratio_math_definitions }}</p>
+          <p>fill gaps: {{ group.points_ratio_fill_gaps }}</p>
+        </div>
+        <div class="row">
             <div class="col">
               <form action="{{ url_for('task_match_definitions', group_id=group.id) }}" class="d-inline">
                 <input type="hidden" name="group_id" value="{{ group.id }}">
                 <button type="submit" name="action" value="learn" class="btn btn-primary">Learn</button>
+              </form>
+              <form action="{{ url_for('task_fill_the_gaps', group_id=group.id) }}" class="d-inline">
+                <input type="hidden" name="group_id" value="{{ group.id }}">
+                <button type="submit" name="action" value="fill in the gaps" class="btn btn-primary">Task gaps</button>
               </form>
               <form action="{{ url_for('task_match_definitions', group_id=group.id) }}" class="d-inline">
                 <input type="hidden" name="group_id" value="{{ group.id }}">
