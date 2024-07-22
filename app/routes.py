@@ -5,7 +5,8 @@ from flask import (render_template, flash,
 from app import app
 from app import db
 from app.forms import (LoginForm, RegistrationForm,
-                       NewWordsGroup, DefinitionSelectionForm, MatchDefinitionsForm, FillGapForm)
+                       NewWordsGroup, DefinitionSelectionForm, MatchDefinitionsForm, FillGapForm,
+                       CCQForm)
 from flask_login import (current_user, login_user,
                          logout_user, login_required)
 import sqlalchemy as sa
@@ -392,12 +393,87 @@ def check_task_match_definitions(group_id):
             cast("ColumnElement[bool]", WordGroup.id == group_id))
         group = db.session.scalars(query).first()
         group.points_ratio_math_definitions = points / all_points
-        flash(f"data: {points / all_points}")
-        flash(group.points_ratio_math_definitions)
-        flash("succ")
         db.session.commit()
 
-     # flash(f"GET TASK: {task_data}")
-    flash("fuck")
+    # flash(f"GET TASK: {task_data}")
     return render_template('check_task_match_definitions.html', task_data=task_data,
                            points=points, all_points=all_points)
+
+
+@app.route('/task_ccqs/<int:group_id>', methods=['GET', 'POST'])
+@login_required
+def task_ccqs(group_id):
+    query = sa.select(WordGroup).where(
+        cast("ColumnElement[bool]", WordGroup.id == group_id)).order_by(sa.desc(WordGroup.created_at))
+    group = db.session.scalars(query).first()
+
+    if not group:
+        return render_template('404.html')
+
+    task = [
+        {"definition": "some def 1", "word": "some word 1",
+         "sentences": [("I am dumb.", "Yes"), ("Notu dummy me are.", "No")]
+         },
+        {"definition": "very fishy", "word": "fish",
+         "sentences": [("Fish Kills.", "Yes"), ("Kill fish.", "No")]
+         }
+    ]
+
+    answers = {}
+
+    grouped_forms = []
+    i = 0
+    for word_item in task:
+        forms = []
+        for sentence in word_item["sentences"]:
+            form = CCQForm(prefix=f"ccq_{i}")
+            form.sentence.data = sentence[0]
+            answers[sentence[0]] = sentence[1]
+            forms.append(form)
+            i += 1
+        data = {"word": word_item["word"], "forms": forms}
+        grouped_forms.append(data)
+
+    task_data = []
+    if request.method == 'POST':
+        forms = []
+        for el in grouped_forms:
+            forms += el["forms"]
+
+        for form in forms:
+            task_data.append({
+                'sentence': form.sentence.data,
+                'user_word': form.answer.data,
+                'answer_word': answers[form.sentence.data]
+            })
+
+        flash(task_data)
+        session['task_data'] = task_data
+        return redirect(url_for('check_task_ccqs', group_id=group_id,
+                                task_data=task_data))
+
+    return render_template('task_ccqs.html', grouped_forms=grouped_forms)
+
+
+@app.route('/check_task_ccqs/<int:group_id>', methods=['GET', 'POST'])
+@login_required
+def check_task_ccqs(group_id):
+    task_data = session.get('task_data', [])
+
+    points = 0
+    all_points = 0
+    if isinstance(task_data, list) and len(task_data) > 0:
+        for result in task_data:
+            if result['user_word'] == result['answer_word']:
+                points += 1
+            all_points += 1
+
+        # query = sa.select(WordGroup).where(
+        #     cast("ColumnElement[bool]", WordGroup.id == group_id))
+        # group = db.session.scalars(query).first()
+        # group.points_ratio_ccqs = points / all_points
+        # db.session.commit()
+
+    return render_template('check_task_ccqs.html', task_data=task_data,
+                           points=points, all_points=all_points)
+

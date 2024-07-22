@@ -35,6 +35,10 @@
                 <input type="hidden" name="group_id" value="{{ group.id }}">
                 <button type="submit" name="action" value="fill in the gaps" class="btn btn-primary">Task gaps</button>
               </form>
+              <form action="{{ url_for('task_ccqs', group_id=group.id) }}" class="d-inline">
+                <input type="hidden" name="group_id" value="{{ group.id }}">
+                <button type="submit" name="action" value="CCQS" class="btn btn-primary">CCQS</button>
+              </form>
               <form action="{{ url_for('task_match_definitions', group_id=group.id) }}" class="d-inline">
                 <input type="hidden" name="group_id" value="{{ group.id }}">
                 <button type="submit" name="action" value="see" class="btn btn-secondary">See</button>

@@ -5,8 +5,8 @@ from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
 import sqlalchemy as sa
 from app import db
 from app.models import User
+from wtforms import RadioField
 
-from flask import flash
 
 
 def word_exists(word):
@@ -43,6 +43,12 @@ class FillGapForm(FlaskForm):
     sentence_end = StringField('Sentence', render_kw={'readonly': True})
     answer = StringField(validators=[DataRequired()])
     submit = SubmitField('Submit answers')
+
+
+class CCQForm(FlaskForm):
+    sentence = StringField('Sentence', render_kw={'readonly': True})
+    answer = RadioField('Your Answer', choices=[('Yes', 'Yes'), ('No', 'No')], default='Yes')
+    submit = SubmitField('Submit')
 
 
 class LoginForm(FlaskForm):
