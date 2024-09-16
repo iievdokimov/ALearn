@@ -374,11 +374,6 @@ def check_task_match_definitions(group_id):
     # 1. counting result
     # 2. saving group result for user
 
-    # task_data_json = request.args.get('task_data_json')
-    # task_data = []
-    # if task_data_json:
-    #     task_data = json.loads(task_data_json)
-
     task_data = session.get('task_data', [])
 
     points = 0
@@ -418,6 +413,19 @@ def task_ccqs(group_id):
          "sentences": [("Fish Kills.", "Yes"), ("Kill fish.", "No")]
          }
     ]
+
+    # USE MOCK
+    # not to pay for API
+    #
+    # task = []
+    # ai_task = TaskCreationAI.generate_ccqs_task(group)
+    # for word in ai_task.keys():
+    #     word_ccq = {}
+    #     word_ccq["word"] = word
+    #     word_ccq["sentences"] = []
+    #     for ccq_sentence in ai_task[word]:
+    #         word_ccq["sentences"].append(ccq_sentence.lightFormat())
+    #     task.append(word_ccq)
 
     answers = {}
 
@@ -476,4 +484,6 @@ def check_task_ccqs(group_id):
 
     return render_template('check_task_ccqs.html', task_data=task_data,
                            points=points, all_points=all_points)
+
+
 
