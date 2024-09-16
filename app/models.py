@@ -2,9 +2,9 @@ from typing import Optional, List
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 from sqlalchemy import String, Integer, Table, Column, ForeignKey, DateTime
-from app import app, db
+from app.extensions import db
 from flask_login import UserMixin
-from app import login
+from app.extensions import login_manager as login
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, UTC
 from sqlalchemy.orm import relationship
@@ -82,16 +82,7 @@ class WordGroup(db.Model):
 
 
 
-# class WordDefined(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     word_id = db.Column(db.Integer, ForeignKey('word.id'), nullable=False)
-#     definition_id = db.Column(db.Integer, ForeignKey('definition.id'), nullable=False)
-#     word = relationship('Word')
-#     definition = relationship('Definition')
-#     word_groups = relationship('WordGroup', secondary=wordgroup_worddefined, back_populates='word_defineds')
-#     __table_args__ = (db.UniqueConstraint('word_id', 'definition_id', name='_word_definition_uc'),)
 
-
-@app.shell_context_processor
-def make_shell_context():
-    return {'sa': sa, 'so': so, 'db': db, 'User': User, 'Word': Word, 'WordGroup': WordGroup}
+# @app.shell_context_processor
+# def make_shell_context():
+#     return {'sa': sa, 'so': so, 'db': db, 'User': User, 'Word': Word, 'WordGroup': WordGroup}

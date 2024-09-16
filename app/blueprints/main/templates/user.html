@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main>
+<div class="container">
+  <h1>{{ current_user.username }}'s word groups</h1>
+    <div class="row mb-3 text-center">
+    <div class="col-2 themed-grid-col-top">word</div>
+    <div class="col-2 themed-grid-col-top">part_of_speech</div>
+    <div class="col-8 themed-grid-col-top">definition</div>
+  </div>
+  {% for group in word_groups %}
+    <div class="row">
+<!--      <h2>{{ group.name }}</h2>-->
+        <p><b>group: {{ group.id }}</b></p>
+      <div>
+        {% for definition in group.words_definitions %}
+          <div class="row mb-3 text-center">
+            <div class="col-2 themed-grid-col">{{definition.word_text}}</div>
+            <div class="col-2 themed-grid-col">{{definition.part_of_speech}}</div>
+            <div class="col-8 themed-grid-col">{{definition.text}}</div>
+          </div>
+        {% endfor %}
+        <div class="row">
+          <p>match definitions: {{ group.points_ratio_math_definitions }}</p>
+          <p>fill gaps: {{ group.points_ratio_fill_gaps }}</p>
+        </div>
+        <div class="row">
+            <div class="col">
+              <form action="{{ url_for('tasks.task_match_definitions', group_id=group.id) }}" class="d-inline">
+                <input type="hidden" name="group_id" value="{{ group.id }}">
+                <button type="submit" name="action" value="learn" class="btn btn-primary">Learn</button>
+              </form>
+              <form action="{{ url_for('tasks.task_fill_the_gaps', group_id=group.id) }}" class="d-inline">
+                <input type="hidden" name="group_id" value="{{ group.id }}">
+                <button type="submit" name="action" value="fill in the gaps" class="btn btn-primary">Task gaps</button>
+              </form>
+              <form action="{{ url_for('tasks.task_ccqs', group_id=group.id) }}" class="d-inline">
+                <input type="hidden" name="group_id" value="{{ group.id }}">
+                <button type="submit" name="action" value="CCQS" class="btn btn-primary">CCQS</button>
+              </form>
+              <form action="{{ url_for('tasks.task_match_definitions', group_id=group.id) }}" class="d-inline">
+                <input type="hidden" name="group_id" value="{{ group.id }}">
+                <button type="submit" name="action" value="see" class="btn btn-secondary">See</button>
+              </form>
+            </div>
+          </div>
+      <p>from: {{ group.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+    </div>
+  {% endfor %}
+</div>
+</main>
+{% endblock %}
