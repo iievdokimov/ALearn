@@ -1,11 +1,12 @@
-from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, FieldList
+from flask_wtf import FlaskForm, Form
+from wtforms import (StringField, PasswordField, BooleanField,
+                     SubmitField, FieldList, SelectField, FormField)
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
 import sqlalchemy as sa
 from app import db
 from app.models import User
+from wtforms import RadioField
 
-from flask import flash
 
 
 def word_exists(word):
@@ -17,12 +18,37 @@ def word_exists(word):
 
 class NewWordsGroup(FlaskForm):
     words = FieldList(StringField('word'), min_entries=2, max_entries=15)
-    submit = SubmitField('Create')
+    submit = SubmitField('Next')
 
     def validate_word(self, word):
         # flash("Validating new word")
         if not word_exists(word):
             raise ValidationError('No such word. Please check the spelling.')
+
+
+class DefinitionSelectionForm(FlaskForm):
+    word = StringField('Word', render_kw={'readonly': True})
+    definitions = SelectField('Definitions', choices=[], coerce=int, validators=[DataRequired()])
+    submit = SubmitField('Create group')
+
+
+class MatchDefinitionsForm(FlaskForm):
+    definition = StringField('Definition', render_kw={'readonly': True})
+    answer = StringField(validators=[DataRequired()])
+    submit = SubmitField('Submit answers')
+
+
+class FillGapForm(FlaskForm):
+    sentence_start = StringField('Sentence', render_kw={'readonly': True})
+    sentence_end = StringField('Sentence', render_kw={'readonly': True})
+    answer = StringField(validators=[DataRequired()])
+    submit = SubmitField('Submit answers')
+
+
+class CCQForm(FlaskForm):
+    sentence = StringField('Sentence', render_kw={'readonly': True})
+    answer = RadioField('Your Answer', choices=[('Yes', 'Yes'), ('No', 'No')], default='Yes')
+    submit = SubmitField('Submit')
 
 
 class LoginForm(FlaskForm):
@@ -39,11 +65,6 @@ class RegistrationForm(FlaskForm):
     password2 = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Register')
 
-    def validate_username(self, username):
-        user = db.session.scalar(sa.select(User).where(
-            User.username == username.data))
-        if user is not None:
-            raise ValidationError('Please use a different username.')
 
     def validate_email(self, email):
         user = db.session.scalar(sa.select(User).where(

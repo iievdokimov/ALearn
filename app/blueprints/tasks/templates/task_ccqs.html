@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+<h3>CCQS</h3>
+    <form method="POST">
+        {% for word_item in grouped_forms %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="span mb-4"><b>{{ word_item['word'] }}</b></div>
+                {% for form in word_item['forms'] %}
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="question">
+                            <p>{{ form.sentence.data }}</p>
+                        </div>
+                        <div class="form-container">
+                            <div class="radio-group">
+                                {{ form.answer() }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+        <div class="text-center">
+          <button type="submit" class="btn btn-primary mb-4">Submit answers</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

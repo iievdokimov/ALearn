@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+  <h1>Select Definitions</h1>
+  <form method="POST">
+    {% for form in forms %}
+      {{ form.hidden_tag() }}
+      <div class="mb-3">
+        <h3>{{ form.word.data }}</h3>
+        <label for="{{ form.definitions.id }}" class="form-label">{{ form.definitions.label }}</label>
+        {{ form.definitions(class="form-select") }}
+      </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Create Group</button>
+  </form>
+</div>
+
+{% endblock %}

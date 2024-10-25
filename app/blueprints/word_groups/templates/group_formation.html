@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-center">
+    <div class="container mt-5" style="max-width: 400px;">
+        <h1>Create group!</h1>
+        <form id="new-words-group-form" method="POST" action="{{ url_for('word_groups.group_formation') }}">
+            {{ form.hidden_tag() }}
+            <div id="words-container">
+                <!-- Placeholder for word input fields -->
+                {% for word_field in form.words %}
+                    <div class="input-group mb-3 word-input">
+<!--                        {{ word_field(class="form-control") }}-->
+<!--                        <button class="btn btn-outline-primary remove-word" type="button">×</button>-->
+<!--                        <div class="invalid-feedback">No such word</div>-->
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="d-flex flex-column">
+                <button id="add-word" class="btn btn-outline-primary mb-3" type="button">+</button>
+                {{ form.submit(class="btn btn-primary", disabled=True) }}
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const wordsContainer = document.getElementById('words-container');
+        const addWordButton = document.getElementById('add-word');
+        const submitButton = document.querySelector('input[type="submit"]');
+        const maxEntries = 15;
+        const minEntries = 2;
+
+        function validateWord(word, input, parentDiv) {
+            $.ajax({
+                url: "{{ url_for('word_groups.validate_word') }}",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ word: word }),
+                success: function(response) {
+                    if (response.is_valid) {
+                        input.classList.remove('is-invalid');
+                        parentDiv.querySelector('.invalid-feedback').style.display = 'none';
+                    } else {
+                        input.classList.add('is-invalid');
+                        parentDiv.querySelector('.invalid-feedback').style.display = 'block';
+                        parentDiv.querySelector('.invalid-feedback').textContent = response.error;
+                    }
+                    updateSubmitButtonState();
+                }
+            });
+        }
+
+        function updateSubmitButtonState() {
+            const wordInputs = wordsContainer.querySelectorAll('.word-input input');
+            let filledCount = 0;
+            let allValid = true;
+
+            wordInputs.forEach(input => {
+                const word = input.value.trim();
+                const parentDiv = input.parentElement;
+                if (word !== '') {
+                    filledCount++;
+                    if (input.classList.contains('is-invalid')) {
+                        allValid = false;
+                    }
+                }
+            });
+
+            submitButton.disabled = filledCount < minEntries || !allValid;
+        }
+
+        function addWordInput(value = '') {
+            const wordInput = document.createElement('div');
+            wordInput.className = 'input-group mb-3 word-input';
+
+            const input = document.createElement('input');
+            input.className = 'form-control';
+            input.name = `words-${wordsContainer.children.length}`;
+            input.type = 'text';
+            input.value = value;
+            input.addEventListener('input', function () {
+                validateWord(input.value.trim(), input, wordInput);
+            });
+
+            const removeButton = document.createElement('button');
+            removeButton.className = 'btn btn-outline-secondary remove-word';
+            removeButton.type = 'button';
+            removeButton.textContent = '×';
+            removeButton.addEventListener('click', () => {
+                wordInput.remove();
+                updateSubmitButtonState();
+            });
+
+            const invalidFeedback = document.createElement('div');
+            invalidFeedback.className = 'invalid-feedback';
+            invalidFeedback.textContent = 'No such word';
+
+            wordInput.appendChild(input);
+            wordInput.appendChild(removeButton);
+            wordInput.appendChild(invalidFeedback);
+            wordsContainer.appendChild(wordInput);
+
+            updateSubmitButtonState();
+        }
+
+
+        function addFixedWordInput(value = '') {
+            const wordInput = document.createElement('div');
+            wordInput.className = 'input-group mb-3 word-input';
+
+            const input = document.createElement('input');
+            input.className = 'form-control';
+            input.name = `words-${wordsContainer.children.length}`;
+            input.type = 'text';
+            input.value = value;
+            input.addEventListener('input', function () {
+                validateWord(input.value.trim(), input, wordInput);
+            });
+
+            const removeButton = document.createElement('button');
+            removeButton.className = 'btn btn-outline-secondary remove-word';
+            removeButton.type = 'button';
+            removeButton.textContent = '×';
+            removeButton.addEventListener('click', () => {
+                wordInput.remove();
+                updateSubmitButtonState();
+            });
+
+            const invalidFeedback = document.createElement('div');
+            invalidFeedback.className = 'invalid-feedback';
+            invalidFeedback.textContent = 'No such word';
+
+            wordInput.appendChild(input);
+            // wordInput.appendChild(removeButton);
+            wordInput.appendChild(invalidFeedback);
+            wordsContainer.appendChild(wordInput);
+
+            updateSubmitButtonState();
+        }
+
+
+
+        // Initial two word inputs
+        addFixedWordInput();
+        addFixedWordInput();
+        {% for word_field in form.words %}
+            addWordInput();
+        {% else %}
+            addWordInput();
+            addWordInput();
+        {% endfor %}
+
+        addWordButton.addEventListener('click', () => {
+            if (wordsContainer.children.length < maxEntries) {
+                addWordInput();
+            }
+        });
+
+        // Update submit button state on page load
+        updateSubmitButtonState();
+    });
+</script>
+{% endblock %}

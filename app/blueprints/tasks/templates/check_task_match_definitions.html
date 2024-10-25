@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <button class="btn btn-light mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+        Correct answers
+    </button>
+    {% for result in task_data %}
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row mb-2">
+                <div class="col-10">
+                    <span class="{% if result['user_word'] == result['answer_word'] %}text-success{% else %}text-danger{% endif %}">
+                        <b>{{ result['user_word'] }}</b>
+                    </span> - {{ result['definition'] }}
+                </div>
+                <div class="col-1 d-flex align-items-center justify-content-center">
+                    {% if result['user_word'] == result['answer_word'] %}
+                    <img src="{{ url_for('static', filename='icons/circle-correct.svg') }}" alt="correct icon" class="icon-size">
+                    {% else %}
+                    <img src="{{ url_for('static', filename='icons/circle-wrong.svg') }}" alt="wrong icon" class="icon-size">
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if result['user_word'] != result['answer_word'] %}
+    <div class="collapse" id="collapseExample">
+        <div class="card mb-4">
+            <div class="card card-body">
+                Correct answer: {{ result['answer_word'] }}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% endfor %}
+</div>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-10 d-flex align-items-center justify-content-center">
+            <h5>Points:</h5>
+        </div>
+        <div class="col-1 d-flex align-items-center justify-content-center">
+            <h5>{{ points }} / {{ all_points }}</h5>
+        </div>
+    </div>
+</div>
+{% endblock %}
