@@ -41,7 +41,11 @@
               </form>
               <form action="{{ url_for('tasks.task_match_definitions', group_id=group.id) }}" class="d-inline">
                 <input type="hidden" name="group_id" value="{{ group.id }}">
-                <button type="submit" name="action" value="see" class="btn btn-secondary">See</button>
+                <button type="submit" name="action" value="match definitions" class="btn btn-secondary">See</button>
+              </form>
+              <form action="{{ url_for('word_groups.mpf', group_id=group.id) }}" class="d-inline">
+                <input type="hidden" name="group_id" value="{{ group.id }}">
+                <button type="submit" name="action" value="mpf" class="btn btn-secondary">See</button>
               </form>
             </div>
           </div>

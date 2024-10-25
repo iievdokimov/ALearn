@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1><b>Meanings</b> of words</h1>
+    <div class="mpf-group">
+      <div>
+        {% for word in words %}
+          <p>word: {{ word["word"] }}</p>
+          <p>part_of_speech: {{ word["part_of_speech"] }}</p>
+          <p>definition: {{ word["definition"] }}</p>
+          <p>examples: {{ word["examples"] }}</p>
+        {% endfor %}
+      </div>
+    </div>
+{% endblock %}

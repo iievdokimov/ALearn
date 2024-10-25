@@ -2,6 +2,7 @@ import traceback
 import requests
 import os
 from dotenv import load_dotenv
+import json
 
 load_dotenv()
 
@@ -111,6 +112,12 @@ def get_data_Dict(word, api_key):
 
     res_data = []
 
+
+
+    # print(data)
+    # pretty_json = json.dumps(data, indent=4, ensure_ascii=False)
+    # print(pretty_json)
+
     if not in_Webster(data):
         return data
 
@@ -163,8 +170,8 @@ def in_Webster(words_data):
         return False
     return True
 
-# word = input()
-# print(get_data_Dict(word))
+word = input()
+print(get_word_data_webster(word))
 #
 # # while True:
 # #     word = input()

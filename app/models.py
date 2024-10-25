@@ -53,7 +53,11 @@ class Word(db.Model):
 
 class Definition(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    # TODO:
+    # word_text -> word (?)
     word_text = db.Column(db.String(64))
+    # TODO:
+    # text -> definition
     text = db.Column(db.Text, nullable=False)
     part_of_speech = db.Column(db.String(20))
     examples = db.Column(db.Text)

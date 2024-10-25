@@ -46,8 +46,27 @@ def create_word_group(user_id, selected_definitions):
     db.session.commit()
 
 
+@word_groups_bp.route('/mpf/<int:group_id>', methods=['GET', 'POST'])
+@login_required
+def get_group_MPF(group_id):
+    query = sa.select(WordGroup).where(
+        cast("ColumnElement[bool]", WordGroup.id == group_id)).order_by(sa.desc(WordGroup.created_at))
+    group = db.session.scalars(query).first()
+
+    words = []
+    for definition in group.words_definitions:
+        words.append(form_MPF_data(definition))
+
+    return render_template('group_MPF.html', words=words)
 
 
+def form_MPF_data(definition):
+    res = {}
+    res["word"] = definition.word_text
+    res["definition"] = definition.text
+    res["part_of_speech"] = definition.part_of_speech
+    res["examples"] = definition.examples
+    return res
 
 @word_groups_bp.route('/learn_group', methods=['GET', 'POST'])
 @login_required
