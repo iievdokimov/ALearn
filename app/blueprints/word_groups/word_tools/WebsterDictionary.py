@@ -170,8 +170,8 @@ def in_Webster(words_data):
         return False
     return True
 
-word = input()
-print(get_word_data_webster(word))
+# word = input()
+# print(get_word_data_webster(word))
 #
 # # while True:
 # #     word = input()
